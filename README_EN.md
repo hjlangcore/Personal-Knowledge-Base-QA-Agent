@@ -16,7 +16,7 @@ It supports document upload, local vector index building, retrieval-augmented an
 - Qwen model integration via OpenAI-compatible client
 - Streaming answers with optional reasoning display
 - Dual modes: `Knowledge Base QA` + `AI Chat`
-- Vector DB operations: clear, rebuild, clear-and-rebuild
+- Vector DB operations: clear, rebuild, clear-and-rebuild, list/delete individual documents, clear upload cache
 - Multi-turn chat history with clear-history action
 - Source snippets with file and page metadata (when available)
 
@@ -33,7 +33,7 @@ It supports document upload, local vector index building, retrieval-augmented an
 ```text
 .
 ├── app.py                    # Streamlit entry
-├── README_CN.md              # Chinese README
+├── README.md                 # Chinese README
 ├── README_EN.md              # English README (this file)
 ├── requirements.txt
 └── src
@@ -71,6 +71,8 @@ Optional:
 - `CHAT_MODEL` (default: `qwen3.6-plus`)
 - `EMBEDDING_MODEL` (default: `text-embedding-v4`)
 - `VECTOR_DB_DIR` (default: `data/chroma_db`)
+- `EMBEDDING_BATCH_SIZE` (default: `10`; DashScope `text-embedding-v4` allows at most 10 per request)
+- `ENABLE_THINKING` (default: `true`; set to `false` if the model does not support `enable_thinking`)
 
 ### 3) Run the app
 
@@ -80,12 +82,15 @@ streamlit run app.py
 
 ## Usage
 
-1. Set API key in sidebar (optional; overrides env var in current process).
+1. Set API key in sidebar (optional; scoped to the current browser session, never written to env vars, so shared deployments do not overwrite each other).
 2. Choose mode in sidebar: `Knowledge Base QA` or `AI Chat`.
 3. In Knowledge Base QA mode, upload documents, build the index, then ask questions.
+   - Rebuilding the same file replaces its previous chunks; building different files accumulates them in one knowledge base.
 4. In AI Chat mode, send messages directly for multi-turn conversation.
 5. Toggle reasoning display if needed (off by default, collapsed view).
 6. Use **Clear Knowledge Base** / **Clear and Rebuild** / **Clear Chat History** when needed.
+7. **Knowledge Base Documents** lists indexed files with chunk counts and supports per-file deletion.
+8. **Clear Upload Cache** only removes raw files under `data/uploads`; the built vector store is unaffected.
 
 ## Troubleshooting
 

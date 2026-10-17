@@ -48,3 +48,14 @@ class Settings:
     def get_retrieval_k() -> int:
         """获取向量检索返回的文档数量上限（k）。"""
         return int(os.getenv("RETRIEVAL_K", "4"))
+
+    @staticmethod
+    def get_embedding_batch_size() -> int:
+        """获取单次嵌入请求的最大文本数（DashScope text-embedding-v4 上限为 10）。"""
+        return max(1, int(os.getenv("EMBEDDING_BATCH_SIZE", "10")))
+
+    @staticmethod
+    def get_enable_thinking() -> bool:
+        """是否开启模型思考模式（部分模型不支持该参数）。"""
+        value = os.getenv("ENABLE_THINKING", "true").strip().lower()
+        return value in {"1", "true", "yes", "on"}
