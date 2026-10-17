@@ -2,12 +2,11 @@
 
 提供创建问答链、检索、以及流式输出的核心组件。对外暴露的接口
 包括 create_qa_chain、ask_question 和 stream_question 等。"""
-from openai import OpenAI
 from langchain_core.prompts import PromptTemplate
+from openai import OpenAI
 
 from src.config import Settings
 from src.vector_store import load_retriever
-
 
 PROMPT_TEMPLATE = """你是一个专业的文档助手。请仅基于以下上下文回答用户的问题：
 ----------------
@@ -23,9 +22,9 @@ PROMPT_TEMPLATE = """你是一个专业的文档助手。请仅基于以下上�
 NO_ANSWER_TEXT = "未找到相关内容"
 
 
-def build_qwen_client() -> OpenAI:
+def build_qwen_client(api_key: str | None = None) -> OpenAI:
     """构建用于对话/文本生成的 OpenAI 客户端。"""
-    api_key = Settings.get_api_key()
+    api_key = api_key or Settings.get_api_key()
     if not api_key:
         raise ValueError(
             "未检测到 API Key。请设置 DASHSCOPE_API_KEY（或 OPENAI_API_KEY）。"
@@ -36,10 +35,10 @@ def build_qwen_client() -> OpenAI:
     )
 
 
-def create_qa_chain():
+def create_qa_chain(api_key: str | None = None):
     """创建用于问答的链对象，包含 client、retriever、prompt。"""
-    client = build_qwen_client()
-    retriever = load_retriever()
+    client = build_qwen_client(api_key=api_key)
+    retriever = load_retriever(api_key=api_key)
     prompt = PromptTemplate(
         template=PROMPT_TEMPLATE,
         input_variables=["context", "question"],
@@ -135,9 +134,9 @@ def stream_question(chain_parts, question: str):
             }
 
 
-def stream_chat(messages):
+def stream_chat(messages, api_key: str | None = None):
     """在对话模式下对外暴露的流式输出接口。"""
-    client = build_qwen_client()
+    client = build_qwen_client(api_key=api_key)
     completion = client.chat.completions.create(
         messages=messages,
         **_completion_kwargs(stream=True),

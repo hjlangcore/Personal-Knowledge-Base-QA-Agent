@@ -2,20 +2,19 @@
 
 添加了模块级注释，描述该模块的职责以及每个函数的行为。"""
 from pathlib import Path
-from typing import List
 
-from langchain_core.documents import Document
 from langchain_community.document_loaders import (
     Docx2txtLoader,
     PyPDFLoader,
     TextLoader,
 )
+from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from src.config import Settings
 
 
-def load_document(file_path: str) -> List[Document]:
+def load_document(file_path: str) -> list[Document]:
     """根据文件后缀加载对应的文档对象列表。"""
     suffix = Path(file_path).suffix.lower()
     if suffix == ".pdf":
@@ -27,7 +26,7 @@ def load_document(file_path: str) -> List[Document]:
     raise ValueError(f"Unsupported file type: {suffix}")
 
 
-def split_documents(documents: List[Document]) -> List[Document]:
+def split_documents(documents: list[Document]) -> list[Document]:
     """将文档列表按设置的块大小和重叠进行分块，返回文本块列表。"""
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=Settings.get_chunk_size(),
