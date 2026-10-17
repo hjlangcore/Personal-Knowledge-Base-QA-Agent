@@ -33,7 +33,7 @@ It supports document upload, local vector index building, retrieval-augmented an
 ```text
 .
 ├── app.py                    # Streamlit entry
-├── README_CN.md              # Chinese README
+├── README.md                 # Chinese README
 ├── README_EN.md              # English README (this file)
 ├── requirements.txt
 └── src
@@ -71,6 +71,8 @@ Optional:
 - `CHAT_MODEL` (default: `qwen3.6-plus`)
 - `EMBEDDING_MODEL` (default: `text-embedding-v4`)
 - `VECTOR_DB_DIR` (default: `data/chroma_db`)
+- `EMBEDDING_BATCH_SIZE` (default: `10`; DashScope `text-embedding-v4` allows at most 10 per request)
+- `ENABLE_THINKING` (default: `true`; set to `false` if the model does not support `enable_thinking`)
 
 ### 3) Run the app
 
@@ -83,6 +85,7 @@ streamlit run app.py
 1. Set API key in sidebar (optional; overrides env var in current process).
 2. Choose mode in sidebar: `Knowledge Base QA` or `AI Chat`.
 3. In Knowledge Base QA mode, upload documents, build the index, then ask questions.
+   - Rebuilding the same file replaces its previous chunks; building different files accumulates them in one knowledge base.
 4. In AI Chat mode, send messages directly for multi-turn conversation.
 5. Toggle reasoning display if needed (off by default, collapsed view).
 6. Use **Clear Knowledge Base** / **Clear and Rebuild** / **Clear Chat History** when needed.

@@ -32,7 +32,7 @@
 ```text
 .
 ├── app.py                    # Streamlit 入口
-├── README_CN.md              # 中文说明（本文件）
+├── README.md                 # 中文说明（本文件）
 ├── README_EN.md              # 英文说明
 ├── requirements.txt
 └── src
@@ -70,6 +70,8 @@ $env:OPENAI_API_KEY="你的DashScopeKey"
 - `CHAT_MODEL`（默认：`qwen3.6-plus`）
 - `EMBEDDING_MODEL`（默认：`text-embedding-v4`）
 - `VECTOR_DB_DIR`（默认：`data/chroma_db`）
+- `EMBEDDING_BATCH_SIZE`（默认：`10`；DashScope `text-embedding-v4` 单次上限为 10）
+- `ENABLE_THINKING`（默认：`true`；模型不支持 `enable_thinking` 时可设为 `false`）
 
 ### 3) 启动项目
 
@@ -82,6 +84,7 @@ streamlit run app.py
 1. 在侧边栏配置 API Key（可选；会覆盖当前进程环境变量）。
 2. 在侧边栏选择功能模式：`知识库问答` 或 `AI 对话`。
 3. 使用知识库问答时：上传文档并构建知识库，然后输入问题提问。
+   - 重复构建同一文件会先删除该文件的旧文本块，避免重复数据；上传不同文件会累积到同一个知识库。
 4. 使用 AI 对话时：直接输入消息进行多轮对话，可清空历史。
 5. 可选开启“显示思考过程”（默认关闭，折叠展示）。
 6. 通过“清空知识库”或“清空并重建”管理向量库。

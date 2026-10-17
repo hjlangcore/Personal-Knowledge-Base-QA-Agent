@@ -20,6 +20,8 @@ PROMPT_TEMPLATE = """你是一个专业的文档助手。请仅基于以下上�
 3. 回答尽量简洁、准确。
 """
 
+NO_ANSWER_TEXT = "未找到相关内容"
+
 
 def build_qwen_client() -> OpenAI:
     """构建用于对话/文本生成的 OpenAI 客户端。"""
@@ -49,10 +51,23 @@ def create_qa_chain():
     }
 
 
+def _completion_kwargs(stream: bool):
+    """构造对话补全参数；仅在开启思考模式时传递 enable_thinking。"""
+    kwargs = {
+        "model": Settings.get_chat_model(),
+        "stream": stream,
+    }
+    if Settings.get_enable_thinking():
+        kwargs["extra_body"] = {"enable_thinking": True}
+    return kwargs
+
+
 def ask_question(chain_parts, question: str):
     """基于给定的 chain_parts 执行检索并生成答案。"""
     retriever = chain_parts["retriever"]
     docs = retriever.invoke(question)
+    if not docs:
+        return {"result": NO_ANSWER_TEXT, "source_documents": []}
     context = "\n\n".join(doc.page_content for doc in docs)
     answer = _create_completion_text(chain_parts, context, question)
     return {"result": answer, "source_documents": docs}
@@ -65,12 +80,10 @@ def _create_completion_text(chain_parts, context: str, question: str) -> str:
     final_prompt = prompt.format(context=context, question=question)
     messages = [{"role": "user", "content": final_prompt}]
     completion = client.chat.completions.create(
-        model=Settings.get_chat_model(),
         messages=messages,
-        extra_body={"enable_thinking": True},
-        stream=False,
+        **_completion_kwargs(stream=False),
     )
-    return completion.choices[0].message.content or "未找到相关内容"
+    return completion.choices[0].message.content or NO_ANSWER_TEXT
 
 
 def stream_question(chain_parts, question: str):
@@ -80,29 +93,40 @@ def stream_question(chain_parts, question: str):
     retriever = chain_parts["retriever"]
 
     docs = retriever.invoke(question)
+    if not docs:
+        yield {
+            "reasoning": "",
+            "answer": NO_ANSWER_TEXT,
+            "source_documents": [],
+        }
+        return
+
     context = "\n\n".join(doc.page_content for doc in docs)
     final_prompt = prompt.format(context=context, question=question)
     messages = [{"role": "user", "content": final_prompt}]
 
     completion = client.chat.completions.create(
-        model=Settings.get_chat_model(),
         messages=messages,
-        extra_body={"enable_thinking": True},
-        stream=True,
+        **_completion_kwargs(stream=True),
     )
 
     reasoning_text = ""
     answer_text = ""
     for chunk in completion:
+        if not chunk.choices:
+            continue
         delta = chunk.choices[0].delta
-        if hasattr(delta, "reasoning_content") and delta.reasoning_content:
-            reasoning_text += delta.reasoning_content
+        if delta is None:
+            continue
+        reasoning = getattr(delta, "reasoning_content", None)
+        if reasoning:
+            reasoning_text += reasoning
             yield {
                 "reasoning": reasoning_text,
                 "answer": answer_text,
                 "source_documents": docs,
             }
-        if hasattr(delta, "content") and delta.content:
+        if delta.content:
             answer_text += delta.content
             yield {
                 "reasoning": reasoning_text,
@@ -115,19 +139,22 @@ def stream_chat(messages):
     """在对话模式下对外暴露的流式输出接口。"""
     client = build_qwen_client()
     completion = client.chat.completions.create(
-        model=Settings.get_chat_model(),
         messages=messages,
-        extra_body={"enable_thinking": True},
-        stream=True,
+        **_completion_kwargs(stream=True),
     )
 
     reasoning_text = ""
     answer_text = ""
     for chunk in completion:
+        if not chunk.choices:
+            continue
         delta = chunk.choices[0].delta
-        if hasattr(delta, "reasoning_content") and delta.reasoning_content:
-            reasoning_text += delta.reasoning_content
+        if delta is None:
+            continue
+        reasoning = getattr(delta, "reasoning_content", None)
+        if reasoning:
+            reasoning_text += reasoning
             yield {"reasoning": reasoning_text, "answer": answer_text}
-        if hasattr(delta, "content") and delta.content:
+        if delta.content:
             answer_text += delta.content
             yield {"reasoning": reasoning_text, "answer": answer_text}
