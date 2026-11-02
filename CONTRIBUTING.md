@@ -17,16 +17,29 @@ Thanks for your interest in contributing to this project.
    pip install -r requirements.txt
    ```
 
-2. Set API key:
+2. Set an API key in the environment. Bash:
+
+   ```bash
+   export DASHSCOPE_API_KEY="your_key"
+   ```
+
+   PowerShell:
 
    ```powershell
    $env:DASHSCOPE_API_KEY="your_key"
    ```
 
-3. Run app:
+3. Run the app:
 
    ```bash
    streamlit run app.py
+   ```
+
+4. Run tests (no paid API key required):
+
+   ```bash
+   pip install -r requirements-dev.txt
+   pytest
    ```
 
 ## Coding Standards
@@ -39,6 +52,7 @@ Thanks for your interest in contributing to this project.
 ## Pull Request Checklist
 
 - [ ] Code runs locally without errors
+- [ ] `pytest` passes
 - [ ] No hardcoded secrets or API keys
 - [ ] Documentation updated (if behavior changed)
 - [ ] Changes are limited to the scope of the PR
